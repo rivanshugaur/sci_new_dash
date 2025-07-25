@@ -510,6 +510,7 @@ def sector_wise_analysis(df):
     if selected_sectors != ["All"]:
         filtered_df = filtered_df[filtered_df["sector"].isin(selected_sectors)]
     # Display results
+    x_axis = "sector" if from_year == to_year else "year"
     render_analysis_results(filtered_df, "sector", "Show Filtered Sector-wise Data",barmode="stack")
 
 def vessel_wise_analysis(df):
