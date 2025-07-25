@@ -1,0 +1,20 @@
+# 🔐 Firebase Credentials
+serviceAccountKey.json
+
+# 🐍 Python cache files
+__pycache__/
+*.pyc
+*.pyo
+
+# 🐍 Virtual environment folders
+venv/
+env/
+
+# 🛠 IDE/editor settings
+.vscode/
+
+# 🔧 Streamlit secrets
+.secrets.toml
+
+# 🍎 macOS system files
+.DS_Store
