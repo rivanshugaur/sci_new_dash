@@ -47,54 +47,47 @@ source venv/bin/activate  # or .\venv\Scripts\activate on Windows
 pip install -r requirements.txt
 ```
 
-### 4. Add your Firebase credentials
- - Place your `serviceAccountKey.json` in the root directory.
- - Ensure the Firebase config in `login_page.py` is correct.
+### 4. Firebase Setup (Login & Access Control)
 
-### 5. Run the app
-```bash
-streamlit run login_page.py
-```
+To use the login feature with your own Firebase backend:
 
+1. Firebase Project & Auth Setup
+	•	Go to Firebase Console
+	•	Create a project (e.g., sci-kpi-dashboard)
+	•	In Authentication > Sign-in method, enable Email/Password
+	•	In Firestore, create a database in production mode
 
-## Folder Structure
+2. Create approved_users Collection
+	•	Go to Firestore > Data
+	•	Create collection: approved_users
+	•	Add documents with fields:
+	•	email (string): user@example.com
+	•	approved (boolean): true
+	•	timestamp (timestamp): [use clock icon]
 
-sci_dashboard_local/
-├── login_page.py             # for logging into the page and calling the sci_dashboard
-├── sci_dashboard.py          # manages and maintains the functionalities of the dashboard
-├── serviceAccountKey.json    # Firebase credentials
-├── requirements.txt          # all requirements that need to be installed before running the dashboard
-└── README.md                 # all instructions to set up the dashboard
+3. Firestore Security Rules:
+    rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /approved_users/{userId} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
 
-## 🔐 Firebase Setup (Required for Login & Access Control)
+4. Firebase Admin Credentials
+	•	Go to Project Settings > Service Accounts
+	•	Click Generate New Private Key
+	•	Save it as serviceAccountKey.json in your project root
 
-To use this dashboard with your own Firebase backend, follow these steps:
-
-### Step 1: Create Firebase Project
-- Go to [https://console.firebase.google.com](https://console.firebase.google.com)
-- Create a new project (e.g., `sci-kpi-dashboard`)
-- Disable Google Analytics if not needed
-
-### Step 2: Enable Authentication
-- In Firebase Console → Authentication → Sign-in method
-- Enable **Email/Password**
-
-### Step 3: Set Up Firestore
-- Go to Firestore Database → Create database (start in production or test mode)
-- Add a collection: `approved_users`
-- Add documents using user emails as IDs (e.g., `user@example.com`)
-
-### Step 4: Generate Firebase Admin Credentials
-- Go to Project Settings → Service Accounts
-- Click "Generate new private key"
-- Download and place `serviceAccountKey.json` in your project root
-
-### Step 5: Replace Firebase Config in Code
-- In Project Settings → General → Add Web App → Copy config
-- Replace the `firebaseConfig` dictionary in `login_page.py` with your copied values
-
-```python
-firebaseConfig = {
+5. Replace Firebase Config in Code
+	•	Go to Project Settings > General > Add Web App
+	•	Copy the config and replace the one in login_page.py:
+        firebaseConfig = {
   "apiKey": "...",
   "authDomain": "...",
   "projectId": "...",
@@ -103,26 +96,66 @@ firebaseConfig = {
   "appId": "...",
   "databaseURL": "..."
 }
+
+### 5. MySQL Database Setup
+Before uploading KPI data, a MySQL database must be set up and connected. Follow the steps below:
+
+## Step 1: Create MySQL Database
+Log into MySQL and create a database:
+
+```sql
+CREATE DATABASE sci_db;
+```
+Create the `kpi_table` where the data will be stored:
+
+```sql
+
+(this is optional as sqlalchemy will automatically create the table and columns)
+
+CREATE TABLE kpi_table (
+  vessel VARCHAR(100),
+  vessel_code VARCHAR(50),
+  sector VARCHAR(50),
+  Total_Income FLOAT,
+  DOE FLOAT,
+  GOP FLOAT,
+  IOE FLOAT,
+  PBT FLOAT,
+  year INT,
+  month VARCHAR(20),
+);
+```
+## Step 2: Update Database Connection in Code
+In your Streamlit code change the DB_CONFIG according to your credentials:
+
+```python
+from sqlalchemy import create_engine
+# Example (adjust user, password, host, and database name as needed)
+change the :
+DB_CONFIG = {
+    "user": os.getenv("DB_USER", "root"),
+    "password": os.getenv("DB_PASSWORD", "Stcs@9978"),
+    "host": os.getenv("DB_HOST", "localhost"),
+    "port": os.getenv("DB_PORT", "3306"),
+    "name": os.getenv("DB_NAME", "sci_db")
+}
+according to your database
+
+```
+Make sure `pymysql` is installed in your environment:
+```bash
+pip install pymysql
+```
+Ensure this engine is used in both:
+- The data upload script
+- The dashboard data loader
+
+### 5. Run the app
+```bash
+streamlit run login_page.py
 ```
 
-Once complete, you can log in, sign up, and control access based on the `approved_users` collection.
-
-
-### Sample Data Format
-- The file format should remain the same as the sample file provided initially.
-
-### Access Control
-Only emails listed in the Firestore `approved_users` collection are allowed to log in.
-
-
-### Future Scope
-
-- For any feature enhancements or visualization improvements, you can update `sci_dashboard.py`, which controls the main web app layout and charts.
-- To apply changes in data cleaning or preprocessing logic, update `cleaner.py`.
-- For authentication or login flow changes, modify `login_page.py` to update the Firebase config, layout, or validation rules.
-
-
-## 👤 Support
+### 👤 Support
 - **Rivanshu Gaur**
 - Email: rivanshugaur@gmail.com
 - LinkedIn: [Rivanshu Gaur](https://www.linkedin.com/in/rivanshu-gaur-a3468628b)
